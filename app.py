@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-    Flaskr Plus
+    FlaskrPlus
     ~~~~~~
 
     A microblog example application written as Flask tutorial with
     Flask and sqlite3.
 
-    :copyright: (c) 2015 by Armin Ronacher.
+    :Copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
 import os
 from sqlite3 import dbapi2 as sqlite3
 from flask import Flask, request, g, redirect, url_for, render_template, flash
+
 
 # create our little application :)
 app = Flask(__name__)
@@ -66,33 +67,17 @@ def close_db(error):
 
 @app.route('/')
 def show_entries():
-    """Shows all entries, optionally filtered by category, with
-    a category selection interface and add post interface above.
-    """
     db = get_db()
-
-    # Filter view if category specified in query string
-    if "category" in request.args:
-        cur = db.execute('SELECT id, title, category, text FROM entries WHERE category = ? ORDER BY id DESC',
-                         [request.args["category"]])
-        entries = cur.fetchall()
-    else:
-        cur = db.execute('SELECT id, title, category, text FROM entries ORDER BY id DESC')
-        entries = cur.fetchall()
-
-    # Get a list of categories for populating the category chooser
-    cur = db.execute('SELECT DISTINCT category FROM entries ORDER BY category')
-    categories = cur.fetchall()
-
-    return render_template('show_entries.html', entries=entries, categories=categories)
+    cur = db.execute('SELECT * FROM entries ORDER BY id DESC')
+    entries = cur.fetchall()
+    return render_template('show_entries.html', entries=entries)
 
 
 @app.route('/add', methods=['POST'])
 def add_entry():
-    """Adds a new post"""
     db = get_db()
-    db.execute('INSERT INTO entries (title, category, text) VALUES (?, ?, ?)',
-               [request.form['title'], request.form['category'], request.form['text']])
+    db.execute('insert into entries (title, text, category) values (?, ?, ?)',
+               [request.form['title'], request.form['text'], request.form['category']])
     db.commit()
     flash('New entry was successfully posted')
     return redirect(url_for('show_entries'))
@@ -100,9 +85,22 @@ def add_entry():
 
 @app.route('/delete', methods=['POST'])
 def delete_entry():
-    """Deletes a selected post, identified by its id"""
     db = get_db()
-    db.execute('DELETE FROM entries WHERE id=?', [request.form['id']])
+    db.execute('DELETE FROM entries WHERE id = ?', [request.form['id']])
     db.commit()
-    flash('Entry deleted')
+    flash('Entry deleted successfully')
     return redirect(url_for('show_entries'))
+
+
+@app.route('/filter', methods=['POST'])
+def filter_entries():
+    db = get_db()
+    user_category = request.form.get('user_category')
+    if user_category:
+        # Corrected the parameter passing here
+        cur = db.execute('SELECT * FROM entries WHERE category = ? ORDER BY id DESC', (user_category,))
+    else:
+        cur = db.execute('SELECT * FROM entries ORDER BY id DESC')
+    entries = cur.fetchall()
+    return render_template('show_entries.html', entries=entries)
+

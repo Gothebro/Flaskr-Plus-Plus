@@ -11,26 +11,24 @@
       <dd><input type="submit" value="Share">
     </dl>
   </form>
-  <h2>Categories</h2>
-  <ul class="categories">
-    <li><a href="?">[all]</a></li>
-  {% for category in categories %}
-    <li><a href="?category={{ category.category }}">{{ category.category }}</a></li>
-  {% endfor %}
-  </ul>
-  <h2>Posts</h2>
   <ul class="entries">
+  <form action="{{ url_for('filter_entries') }}" method="post">
+      <select name="user_category" id="user_category">
+      <option value=""></option>
+        {% for entry in entries %}
+            <option value="{{ entry.category }}">{{ entry.category }}</option>
+        {% endfor %}
+      </select>
+      <input type="submit" value="Filter">
+  </form>
   {% for entry in entries %}
     <li>
-        <h3>{{ entry.title }}</h3>
-        <i>[{{ entry.category }}]</i>
-        <p>{{ entry.text|safe }}</p>
-        <!-- A form to submit a delete request for the current entry.
-             Uses a hidden input to be able to pass the current id
-             to the request handler. -->
-        <form action="{{ url_for('delete_entry') }}" method="post">
-          <input type="hidden" name="id" value="{{ entry.id }}">
-          <button type="submit" class="del-button">Delete</button>
+        <h2>{{ entry.title }}</h2>
+        <h6>{{ entry.category }}</h6>
+        {{ entry.text|safe }}
+        <form action="{{ url_for('delete_entry') }}" method="post" class="delete-entry">
+            <input type="hidden" name="id" value="{{ entry.id }}">
+            <input type="submit" value="Delete">
         </form>
     </li>
   {% else %}
